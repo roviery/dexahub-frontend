@@ -47,8 +47,8 @@ export interface Employee {
 export interface PaginatedResponse<T> {
   data: T[];
   total: number;
-  page: number;
-  limit: number;
+  page?: number;
+  limit?: number;
 }
 
 export interface CreateEmployeeData {
