@@ -6,10 +6,6 @@ import { useRouter } from "next/navigation";
 import { Loader2Icon } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
 
-/**
- * Client-side route guard. Redirects unauthenticated visitors to /login and
- * renders a spinner while auth state is hydrating from storage.
- */
 export function ProtectedRoute({ children }: { children: ReactNode }) {
   const { isAuthenticated, isLoading } = useAuth();
   const router = useRouter();

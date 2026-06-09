@@ -12,7 +12,6 @@ import {
 import type { AttendanceRecord } from "@/types/api";
 import { formatTime, photoUrl } from "@/lib/attendance";
 
-/** Success state shown once the employee has checked in for the day. */
 export function CheckInCard({ record }: { record: AttendanceRecord }) {
   return (
     <Card>

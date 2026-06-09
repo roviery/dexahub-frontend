@@ -31,8 +31,6 @@ function CheckInContent() {
     }
   }, []);
 
-  // Initial load. setState runs inside the promise callbacks (after the await),
-  // never synchronously in the effect body.
   useEffect(() => {
     let cancelled = false;
     getMyAttendance()

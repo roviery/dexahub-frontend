@@ -22,10 +22,6 @@ const VIDEO_CONSTRAINTS: MediaStreamConstraints = {
   audio: false,
 };
 
-/**
- * Opens the front camera, lets the employee snap a selfie, preview it, and
- * either retake or confirm. The confirmed frame is handed up as a JPEG File.
- */
 export function CameraCapture({ onConfirm, isSubmitting }: CameraCaptureProps) {
   const videoRef = useRef<HTMLVideoElement>(null);
   const streamRef = useRef<MediaStream | null>(null);
@@ -45,7 +41,6 @@ export function CameraCapture({ onConfirm, isSubmitting }: CameraCaptureProps) {
     setError(null);
   }, []);
 
-  // Manual retry from the error state.
   const startCamera = useCallback(async () => {
     try {
       attachStream(await navigator.mediaDevices.getUserMedia(VIDEO_CONSTRAINTS));
@@ -54,8 +49,6 @@ export function CameraCapture({ onConfirm, isSubmitting }: CameraCaptureProps) {
     }
   }, [attachStream]);
 
-  // Acquire the camera on mount. setState only runs inside the async callbacks
-  // (after the await), never synchronously in the effect body.
   useEffect(() => {
     let cancelled = false;
     navigator.mediaDevices
@@ -77,11 +70,16 @@ export function CameraCapture({ onConfirm, isSubmitting }: CameraCaptureProps) {
     };
   }, [attachStream, stopStream]);
 
-  // Revoke the object URL when the preview changes or the component unmounts.
   useEffect(() => {
     return () => {
       if (previewUrl) URL.revokeObjectURL(previewUrl);
     };
+  }, [previewUrl]);
+
+  useEffect(() => {
+    if (!previewUrl && videoRef.current && streamRef.current) {
+      videoRef.current.srcObject = streamRef.current;
+    }
   }, [previewUrl]);
 
   function capture() {
@@ -133,7 +131,7 @@ export function CameraCapture({ onConfirm, isSubmitting }: CameraCaptureProps) {
           <img
             src={previewUrl}
             alt="Check-in preview"
-            className="h-full w-full object-cover"
+            className="h-full w-full -scale-x-100 object-cover"
           />
         ) : (
           <video
