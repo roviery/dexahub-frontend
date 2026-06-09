@@ -2,18 +2,24 @@
 
 import { useCallback, useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
-import { LogOutIcon } from "lucide-react";
+import { ClipboardCheckIcon, LogOutIcon } from "lucide-react";
 import { toast } from "sonner";
 import { ProtectedRoute } from "@/components/auth/ProtectedRoute";
 import { AttendanceHistory } from "@/components/attendance/AttendanceHistory";
 import { CameraCapture } from "@/components/attendance/CameraCapture";
 import { CheckInCard } from "@/components/attendance/CheckInCard";
-import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useAuth } from "@/hooks/useAuth";
 import { ApiError, checkIn, getMyAttendance } from "@/lib/api";
 import { isToday } from "@/lib/attendance";
 import type { AttendanceRecord } from "@/types/api";
+
+function getGreeting(): string {
+  const h = new Date().getHours();
+  if (h < 12) return "Good morning";
+  if (h < 17) return "Good afternoon";
+  return "Good evening";
+}
 
 function CheckInContent() {
   const { logout } = useAuth();
@@ -74,11 +80,32 @@ function CheckInContent() {
   }
 
   return (
-    <div className="mx-auto flex w-full max-w-md flex-col gap-6 p-4 py-8">
-      <header className="flex items-center justify-between">
+    <div className="min-h-dvh bg-slate-50">
+      {/* Sticky top bar */}
+      <header className="sticky top-0 z-10 border-b bg-white/80 backdrop-blur-md">
+        <div className="mx-auto flex max-w-md items-center justify-between px-4 py-3">
+          <div className="flex items-center gap-2">
+            <div className="flex size-7 items-center justify-center rounded-lg bg-red-600">
+              <ClipboardCheckIcon className="size-4 text-white" />
+            </div>
+            <span className="text-sm font-bold">DexaHub</span>
+          </div>
+          <button
+            onClick={handleLogout}
+            className="flex cursor-pointer items-center gap-1.5 rounded-lg px-3 py-1.5 text-sm text-muted-foreground transition-colors hover:bg-slate-100 hover:text-foreground"
+          >
+            <LogOutIcon className="size-4" />
+            Log out
+          </button>
+        </div>
+      </header>
+
+      {/* Page content */}
+      <div className="mx-auto flex max-w-md flex-col gap-6 px-4 py-6">
+        {/* Greeting */}
         <div>
-          <h1 className="text-xl font-semibold">Daily check-in</h1>
-          <p className="text-sm text-muted-foreground">
+          <h1 className="text-2xl font-bold tracking-tight">{getGreeting()}</h1>
+          <p className="mt-0.5 text-sm text-muted-foreground">
             {new Date().toLocaleDateString(undefined, {
               weekday: "long",
               month: "long",
@@ -86,21 +113,19 @@ function CheckInContent() {
             })}
           </p>
         </div>
-        <Button variant="ghost" size="sm" onClick={handleLogout}>
-          <LogOutIcon />
-          Log out
-        </Button>
-      </header>
 
-      {records === null ? (
-        <Skeleton className="aspect-4/3 w-full rounded-xl" />
-      ) : todayRecord ? (
-        <CheckInCard record={todayRecord} />
-      ) : (
-        <CameraCapture onConfirm={handleConfirm} isSubmitting={isSubmitting} />
-      )}
+        {/* Camera / checked-in state */}
+        {records === null ? (
+          <Skeleton className="aspect-4/3 w-full rounded-2xl" />
+        ) : todayRecord ? (
+          <CheckInCard record={todayRecord} />
+        ) : (
+          <CameraCapture onConfirm={handleConfirm} isSubmitting={isSubmitting} />
+        )}
 
-      {records !== null && <AttendanceHistory records={records} />}
+        {/* History */}
+        {records !== null && <AttendanceHistory records={records} />}
+      </div>
     </div>
   );
 }
