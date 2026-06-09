@@ -2,9 +2,13 @@
 
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
-import { ClipboardListIcon, LogOutIcon, UsersIcon } from "lucide-react";
+import {
+  ClipboardCheckIcon,
+  ClipboardListIcon,
+  LogOutIcon,
+  UsersIcon,
+} from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
-import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 
 const navItems = [
@@ -23,37 +27,54 @@ export function AdminSidebar() {
   }
 
   return (
-    <aside className="flex w-56 shrink-0 flex-col bg-slate-900">
-      <div className="p-5">
-        <span className="text-sm font-semibold text-white">DexaHub Admin</span>
+    <aside className="flex w-60 shrink-0 flex-col border-r border-white/5 bg-red-50">
+      {/* Logo */}
+      <div className="flex items-center gap-3 border-b border-white/5 px-5 py-[18px]">
+        <div className="flex size-8 shrink-0 items-center justify-center rounded-lg bg-red-600">
+          <ClipboardCheckIcon className="size-4 text-white" />
+        </div>
+        <div className="min-w-0">
+          <p className="truncate text-sm font-bold text-red-600">DexaHub</p>
+          <p className="text-xs text-slate-500">Admin Portal</p>
+        </div>
       </div>
-      <nav className="flex flex-1 flex-col gap-1 px-3">
-        {navItems.map(({ href, label, icon: Icon }) => (
-          <Link
-            key={href}
-            href={href}
-            className={cn(
-              "flex items-center gap-3 rounded-md px-3 py-2 text-sm transition-colors",
-              pathname === href
-                ? "bg-slate-700 text-white"
-                : "text-slate-400 hover:bg-slate-800 hover:text-white",
-            )}
-          >
-            <Icon className="size-4" />
-            {label}
-          </Link>
-        ))}
+
+      {/* Nav */}
+      <nav className="flex flex-1 flex-col px-3 py-4">
+        <p className="mb-2 px-3 text-[11px] font-semibold uppercase tracking-wider text-slate-600">
+          Management
+        </p>
+        <div className="flex flex-col gap-0.5">
+          {navItems.map(({ href, label, icon: Icon }) => {
+            const isActive = pathname === href;
+            return (
+              <Link
+                key={href}
+                href={href}
+                className={cn(
+                  "flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition-colors duration-150",
+                  isActive
+                    ? "bg-red-600/15 text-red-400"
+                    : "text-slate-400 hover:bg-red-50 hover:text-red-900",
+                )}
+              >
+                <Icon className="size-4 shrink-0" />
+                {label}
+              </Link>
+            );
+          })}
+        </div>
       </nav>
-      <div className="p-3">
-        <Button
-          variant="ghost"
-          size="sm"
-          className="w-full justify-start text-slate-400 hover:bg-slate-800 hover:text-white"
+
+      {/* Logout */}
+      <div className="border-t border-white/5 p-3">
+        <button
           onClick={handleLogout}
+          className="flex w-full cursor-pointer items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium text-slate-400 transition-colors duration-150 hover:bg-red-50 hover:text-red-900"
         >
-          <LogOutIcon className="size-4" />
+          <LogOutIcon className="size-4 shrink-0" />
           Log out
-        </Button>
+        </button>
       </div>
     </aside>
   );
