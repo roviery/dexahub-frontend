@@ -1,74 +1,124 @@
 # DexaHub Frontend
 
-Next.js (App Router) frontend for the DexaHub HR/attendance product. This first
-slice covers **employee login** and the **daily photo check-in**.
-
-The HRD admin UI is not built yet.
+Next.js 16 frontend for the DexaHub HR & attendance platform.
 
 ## Stack
 
-- Next.js 16 (App Router) + React 19 + TypeScript
-- Tailwind CSS v4 + shadcn/ui
-- Auth tokens in `localStorage` with a fetch wrapper that auto-refreshes on 401
+- **Next.js 16** (App Router) + **React 19** + **TypeScript**
+- **Tailwind CSS v4** + **shadcn/ui** components
+- **Sonner** for toasts, **next-themes** for dark/light mode
+- Auth tokens in `localStorage` with automatic silent refresh on 401
 
 ## Prerequisites
 
-The [`dexahub-api`](../dexahub-api) gateway must be running on
-`http://localhost:3000` with seeded employees:
+The `dexahub-api` backend must be fully running before starting the frontend. See [dexahub-api/README.md](../dexahub-api/README.md) for setup instructions.
+
+Quick recap — from `dexahub-api/`:
 
 ```bash
-cd ../dexahub-api
 docker compose up mysql -d
-nest start auth-service --watch        # :3001 (TCP)
-nest start user-service --watch        # :3002 (TCP)
-nest start attendance-service --watch  # :3003 (TCP)
-nest start api-gateway --watch         # :3000 (HTTP, the entry point)
-npm run seed                           # creates demo employees
+nest start auth-service --watch
+nest start user-service --watch
+nest start attendance-service --watch
+nest start api-gateway --watch
+npm run seed
 ```
 
-## Run
+## Quick Start
 
 ```bash
+cd dexahub-frontend
 npm install
-cp .env.example .env.local   # already present in dev
-npm run dev -- -p 3001       # 3000 is taken by the API gateway
+cp .env.example .env.local
+npm run dev
 ```
 
-Open <http://localhost:3001> and sign in with a seeded account, e.g.
-`employee.one@dexahub.com` / `Test@123!`.
+Open [http://localhost:3004](http://localhost:3004).
 
-## Environment
+## Test Accounts
 
-| Variable                       | Purpose                                  |
-| ------------------------------ | ---------------------------------------- |
-| `NEXT_PUBLIC_API_BASE_URL`     | REST gateway base, e.g. `…/api/v1`       |
-| `NEXT_PUBLIC_UPLOADS_BASE_URL` | Where check-in photos are served from    |
+| Role | Email | Password |
+|---|---|---|
+| HRD Admin | `admin@dexahub.com` | `Test@123!` |
+| Employee | `employee.one@dexahub.com` | `Test@123!` |
 
-## Structure
+- **Employees** land on `/check-in` — daily photo check-in and their own attendance history.
+- **HRD Admins** land on `/admin/employees` — employee management and full attendance logs.
 
-```
-src/
-  app/
-    page.tsx                  # auth-aware redirect → /login or /check-in
-    login/page.tsx
-    (employee)/check-in/page.tsx
-  components/
-    auth/        LoginForm, ProtectedRoute
-    attendance/  CameraCapture, CheckInCard, AttendanceHistory
-    ui/          shadcn/ui primitives
-  hooks/useAuth.tsx           # AuthProvider + useAuth (useSyncExternalStore)
-  lib/
-    api.ts                    # fetch wrapper, login/logout/checkIn helpers
-    auth-storage.ts           # token persistence + change subscription
-    jwt.ts                    # decode access-token claims (role/sub)
-    attendance.ts             # photo URL + date/time formatting
-  types/api.ts                # backend-mirrored types
-```
+## Environment Variables
+
+Copy `.env.example` to `.env.local` and adjust if needed:
+
+| Variable | Description | Default |
+|---|---|---|
+| `NEXT_PUBLIC_API_BASE_URL` | Backend REST gateway base URL | `http://localhost:3000/api/v1` |
+| `NEXT_PUBLIC_UPLOADS_BASE_URL` | Where check-in photos are served | `http://localhost:3000` |
 
 ## Scripts
 
 ```bash
-npm run dev     # dev server (pass -p 3001 to avoid the API's port)
-npm run build   # production build
-npm run lint    # eslint
+npm run dev      # dev server on :3004 (Turbopack)
+npm run build    # production build
+npm run lint     # ESLint
 ```
+
+## Project Structure
+
+```
+src/
+  app/
+    layout.tsx                  # root layout (AuthProvider + ThemeProvider)
+    page.tsx                    # auth-aware redirect → /login or /check-in
+    login/page.tsx
+    (employee)/
+      check-in/page.tsx         # employee daily check-in + own history
+    admin/
+      layout.tsx                # admin shell with sidebar
+      employees/page.tsx        # HRD: employee CRUD
+      attendance/page.tsx       # HRD: attendance log with filters
+  components/
+    auth/
+      LoginForm.tsx
+      ProtectedRoute.tsx        # redirects unauthenticated → /login
+    admin/
+      AdminRoute.tsx            # redirects non-HRD_ADMIN → /check-in
+      AdminSidebar.tsx
+      attendance/               # AttendanceFilters, AttendanceTable
+      employees/                # EmployeeModal, EmployeesTable
+    attendance/
+      CameraCapture.tsx         # webcam → File
+      CheckInCard.tsx
+      AttendanceHistory.tsx
+    ui/                         # shadcn/ui primitives
+  hooks/
+    useAuth.tsx                 # AuthProvider + useAuth hook
+  lib/
+    api.ts                      # all API calls + silent refresh logic
+    auth-storage.ts             # localStorage token helpers
+    jwt.ts                      # client-side JWT decode (no verification)
+    attendance.ts               # photo URL + date formatting helpers
+    utils.ts                    # cn() Tailwind helper
+  types/
+    api.ts                      # types mirrored from the backend
+```
+
+## Auth Flow
+
+1. `useAuth()` reads the access token from `localStorage` via `useSyncExternalStore` — no effects, re-renders instantly on token change.
+2. `apiFetch` in `lib/api.ts` attaches the Bearer token to every request. On a 401 it transparently calls `/auth/refresh` once (concurrent requests share the same in-flight promise) and retries.
+3. If refresh fails, tokens are cleared and the user is redirected to `/login`.
+4. `ProtectedRoute` and `AdminRoute` guard pages at the component level — no middleware needed.
+
+## Adding shadcn/ui Components
+
+```bash
+npx shadcn add <component-name>
+```
+
+Components are generated into `src/components/ui/`.
+
+## Notes
+
+- Tailwind v4 config lives in `postcss.config.mjs` and `src/app/globals.css` — there is no `tailwind.config.js`.
+- All API calls go through `lib/api.ts`. Never call `fetch` directly from components.
+- Shared backend types live in `src/types/api.ts` and are kept in sync with the API manually.
