@@ -30,3 +30,43 @@ export interface AttendanceRecord {
   date: string;
   createdAt: string;
 }
+
+export interface Employee {
+  id: string;
+  email: string;
+  fullName: string;
+  role: UserRole;
+  phone?: string;
+  department?: string;
+  position?: string;
+  joinedAt?: string;
+  isActive: boolean;
+  createdAt: string;
+}
+
+export interface PaginatedResponse<T> {
+  data: T[];
+  total: number;
+  page: number;
+  limit: number;
+}
+
+export interface CreateEmployeeData {
+  email: string;
+  password: string;
+  role: UserRole;
+  fullName: string;
+  phone?: string;
+  department?: string;
+  position?: string;
+  joinedAt?: string;
+}
+
+export interface UpdateEmployeeData {
+  fullName?: string;
+  phone?: string;
+  department?: string;
+  position?: string;
+  joinedAt?: string;
+  isActive?: boolean;
+}

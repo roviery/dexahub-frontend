@@ -1,7 +1,11 @@
 import type {
   AttendanceRecord,
+  CreateEmployeeData,
+  Employee,
   LoginResponse,
+  PaginatedResponse,
   RefreshResponse,
+  UpdateEmployeeData,
 } from "@/types/api";
 import {
   clearTokens,
@@ -148,4 +152,52 @@ export function checkIn(photo: File): Promise<AttendanceRecord> {
     method: "POST",
     body: form,
   });
+}
+
+export function listEmployees(
+  page = 1,
+  limit = 20,
+): Promise<PaginatedResponse<Employee>> {
+  return apiFetch<PaginatedResponse<Employee>>(
+    `/users?page=${page}&limit=${limit}`,
+  );
+}
+
+export function createEmployee(dto: CreateEmployeeData): Promise<Employee> {
+  return apiFetch<Employee>("/users", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(dto),
+  });
+}
+
+export function updateEmployee(
+  id: string,
+  dto: UpdateEmployeeData,
+): Promise<Employee> {
+  return apiFetch<Employee>(`/users/${id}`, {
+    method: "PATCH",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(dto),
+  });
+}
+
+export function listAttendance(
+  params: {
+    page?: number;
+    limit?: number;
+    date?: string;
+    employeeId?: string;
+  } = {},
+): Promise<PaginatedResponse<AttendanceRecord>> {
+  const { page = 1, limit = 50, date, employeeId } = params;
+  const query = new URLSearchParams({
+    page: String(page),
+    limit: String(limit),
+  });
+  if (date) query.set("date", date);
+  if (employeeId) query.set("employeeId", employeeId);
+  return apiFetch<PaginatedResponse<AttendanceRecord>>(
+    `/attendance?${query.toString()}`,
+  );
 }
