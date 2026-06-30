@@ -15,13 +15,10 @@ export default function AttendancePage() {
   const [employeeName, setEmployeeName] = useState("");
   const attendanceFetchId = useRef(0);
 
-  // Employees are stable — fetch once on mount.
   useEffect(() => {
-    listEmployees(1, 1000)
+    listEmployees(1, 100)
       .then((result) => setEmployees(result.data))
-      .catch(() => {
-        // Attendance table still works; names fall back to employeeId.
-      });
+      .catch(() => { });
   }, []);
 
   const loadAttendance = useCallback(async (filterDate?: string) => {
@@ -29,7 +26,7 @@ export default function AttendancePage() {
     setIsLoading(true);
     try {
       const result = await listAttendance({ limit: 50, date: filterDate || undefined });
-      if (fetchId !== attendanceFetchId.current) return; // stale response — discard
+      if (fetchId !== attendanceFetchId.current) return;
       setRecords(result.data);
     } catch (err) {
       if (fetchId !== attendanceFetchId.current) return;
